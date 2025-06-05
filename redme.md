@@ -2,216 +2,338 @@
 
 ## Overview
 
-The Learning Pathway Creator is a fullstack web application that enables course creators to build structured learning pathways through an intuitive, step-by-step interface. The application combines manual content creation with AI-powered assistance to streamline the pathway development process.
+The Learning Pathway Creator is a fullstack web application that enables course creators to build structured learning pathways through a guided, step-by-step process. The application uses Express.js for the backend API and React for the frontend interface, with AI-powered content generation capabilities.
 
-## Technology Stack
+## Application Architecture
 
-- **Frontend**: React (JavaScript)
-- **Backend**: Express.js (JavaScript)
-- **Data Storage**: Local storage (browser-based)
-- **AI Integration**: Custom API endpoints for content generation
+### Technology Stack
+- **Frontend**: React (JavaScript, no TypeScript)
+- **Backend**: Express.js
+- **Data Storage**: Local storage for temporary data, with final save functionality
+- **AI Integration**: Custom AI endpoints for content generation and refinement
 
-## Application Workflow
+### Core Features
+- Step-by-step pathway creation workflow
+- AI-powered content generation with refinement capabilities
+- Version history with navigation controls
+- Tree-view visualization of pathway structure
+- Local data persistence with final save functionality
 
-### Step-by-Step Creation Process
+## User Workflow
 
-The pathway creation follows a linear, guided workflow where creators complete one step at a time:
+### Pathway Creation Process
 
-#### Step 1: Job Title Definition
-- Creator enters a job title that defines the target role for the learning pathway
-- This serves as the foundation for all subsequent AI-generated content
-- No AI assistance available at this step
+The application guides users through a sequential 5-step process:
 
-#### Step 2: Course Titles Generation
-- Creator defines the high-level courses within the pathway
-- AI assistance available via "Create with AI" button
-- Generated suggestions can be refined through follow-up prompts
-- Version history maintained for all refinements
+1. **Job Title Definition**
+   - Single form input for the target job title
+   - No AI generation available for this step
+   - Serves as the foundation for all subsequent AI-generated content
 
-#### Step 3: Module Titles Definition
-- For each course, creator defines individual module titles
-- Process repeated for every course in the pathway
-- AI considers the job title, current course, and sibling courses for context
-- Refinement and version control available
+2. **Course Titles Creation**
+   - Define a list of course titles within the pathway
+   - "Create with AI" button generates initial suggestions
+   - Refinement capabilities with follow-up prompts
+   - Version history tracking
 
-#### Step 4: Module Segments Overview
-- For each module, creator defines segment types and titles
-- Segment types: Info, Research, Exercise, Discussion, Project
-- AI generates structured segment overviews with appropriate types
-- Full refinement capabilities with version tracking
+3. **Module Titles Definition**
+   - Create module titles for each course individually
+   - Context-aware generation using job title and sibling courses
+   - AI generation and refinement for each course
+   - Version history per course
 
-#### Step 5: Segment Content Creation
-- Detailed content creation for each individual segment
-- AI generates markdown-formatted content based on segment type and context
-- Content considers the full hierarchy (job → course → module → segment)
-- Refinement process allows iterative content improvement
+4. **Module Segment Overview**
+   - Define segment types and titles for each module
+   - Segment types: Info, Research, Exercise, Discussion, Project
+   - AI-powered generation with contextual awareness
+   - Version history per module
+
+5. **Segment Content Creation**
+   - Generate detailed content for each segment
+   - Markdown-formatted content output
+   - Context includes all hierarchical information
+   - Individual segment refinement capabilities
 
 ### Navigation and Version Control
 
-#### Folder Tree Structure
-- Visual representation of the complete pathway hierarchy
-- Expandable/collapsible tree showing Job Title → Courses → Modules → Segments
-- Click navigation to any level for editing
-- Real-time updates as content is created
-
-#### Version Management
-- Each AI refinement creates a new version
-- Back/forward navigation between versions
-- Version dropdown showing numerical progression
-- Ability to revert to any previous version
-
 #### Form Navigation
-- Single form presentation (one step at a time)
-- Progress indicator showing current step
-- Ability to navigate back to edit previous steps
-- Data persistence across navigation
+- Only one form displayed at a time
+- Linear progression through steps
+- Ability to return to previous steps for editing
+- Tree view sidebar for quick navigation to any section
 
-## API Endpoints Specification
+#### AI Refinement System
+- Initial AI generation on button click
+- Follow-up prompt input for refinements
+- Back/Forward buttons for version navigation
+- Version dropdown showing all iterations
+- Each refinement creates a new version in history
 
-### Course Title Generation
+#### Data Persistence
+- Automatic local storage after each form submission
+- Real-time updates to tree structure
+- Final "Save Pathway" button for permanent storage
 
+## User Interface Components
+
+### Main Layout
+- **Header**: Application title and progress indicator
+- **Sidebar**: Tree-view navigation showing pathway structure
+- **Main Content**: Current step form
+- **Footer**: Navigation buttons (Previous/Next)
+
+### Form Components
+- **Job Title Form**: Simple text input with validation
+- **List Creation Forms**: Dynamic add/remove interface for titles
+- **AI Generation Panel**: 
+  - "Create with AI" button
+  - Additional context textarea
+  - Generated content display
+  - Refinement prompt input
+  - Version navigation controls
+
+### Tree Navigation
+- **Hierarchical Display**: Job Title → Courses → Modules → Segments
+- **Expandable/Collapsible**: Folder-style interface
+- **Status Indicators**: Visual markers for completed/incomplete sections
+- **Click Navigation**: Direct access to any section for editing
+
+## API Documentation
+
+### Content Generation Endpoints
+
+#### Generate Course Titles
 **POST** `/generateCourseTitles`
-- Generates initial course titles based on job title
-- Returns array of suggested course titles
 
+Generates initial course titles based on job title and additional context.
+
+**Request Body:**
+- `jobTitle` (String): The target job title for the pathway
+- `additionalContext` (String): Optional additional context or requirements
+
+**Response:**
+- `courseTitles` (String): Generated course titles as formatted text
+
+#### Refine Course Titles
 **POST** `/refineCourseTitles`
-- Refines existing course titles with additional context
-- Returns structured changes (additions and deletions with positioning)
 
-### Module Title Generation
+Refines existing course titles based on user feedback.
 
+**Request Body:**
+- `jobTitle` (String): The target job title
+- `courseTitles` (String[]): Current list of course titles
+- `additionalContext` (String): Refinement instructions or context
+
+**Response:**
+- `titlesToDelete` (String[]): Titles to be removed from the list
+- `titlesToAdd` (Object[]): New titles to add
+  - `title` (String): The new course title
+  - `idx` (Number): Position index for insertion
+
+#### Generate Module Titles
 **POST** `/generateModuleTitles`
-- Generates module titles for a specific course
-- Considers job title, target course, and sibling courses for context
 
+Creates module titles for a specific course within the pathway context.
+
+**Request Body:**
+- `jobTitle` (String): The target job title
+- `courseTitle` (String): The specific course being developed
+- `siblingCourseTitles` (String[]): Other courses in the pathway for context
+- `additionalContext` (String): Optional additional requirements
+
+**Response:**
+- `moduleTitles` (String[]): Generated list of module titles
+
+#### Refine Module Titles
 **POST** `/refineModuleTitles`
-- Refines existing module titles with additional context
-- Returns structured changes for precise modifications
 
-### Segment Overview Generation
+Refines existing module titles based on user feedback.
 
+**Request Body:**
+- `jobTitle` (String): The target job title
+- `courseTitle` (String): The specific course
+- `siblingCourseTitles` (String[]): Other courses for context
+- `moduleTitles` (String[]): Current module titles
+- `additionalContext` (String): Refinement instructions
+
+**Response:**
+- `titlesToDelete` (String[]): Module titles to remove
+- `titlesToAdd` (Object[]): New modules to add
+  - `title` (String): The new module title
+  - `idx` (Number): Position index for insertion
+
+#### Generate Segment Overview
 **POST** `/generateSegmentOverview`
-- Creates segment overview with titles and types
-- Considers full hierarchy context for appropriate segment generation
 
+Creates segment structure (types and titles) for a specific module.
+
+**Request Body:**
+- `jobTitle` (String): The target job title
+- `courseTitle` (String): The parent course
+- `siblingCourseTitles` (String[]): Other courses for context
+- `moduleTitle` (String): The specific module being developed
+- `siblingModuleTitles` (String[]): Other modules in the course
+- `additionalContext` (String): Optional requirements
+
+**Response:**
+- `segments` (Object[]): Generated segment structure
+  - `title` (String): The segment title
+  - `type` (String): Segment type (Info, Research, Exercise, Discussion, Project)
+
+#### Refine Segment Overview
 **POST** `/refineSegmentOverview`
-- Refines segment overview with structured change responses
-- Maintains type assignments while allowing title modifications
 
-### Segment Content Generation
+Refines the segment structure based on user feedback.
 
+**Request Body:**
+- `jobTitle` (String): The target job title
+- `courseTitle` (String): The parent course
+- `siblingCourseTitles` (String[]): Other courses for context
+- `moduleTitle` (String): The specific module
+- `siblingModuleTitles` (String[]): Other modules for context
+- `segments` (Object[]): Current segment structure
+- `additionalContext` (String): Refinement instructions
+
+**Response:**
+- `segmentsToDelete` (String[]): Segment titles to remove
+- `titlesToAdd` (Object[]): New segments to add
+  - `segment` (Object): The new segment structure
+    - `title` (String): Segment title
+    - `type` (String): Segment type
+  - `idx` (Number): Position index for insertion
+
+#### Generate Segment Content
 **POST** `/generateSegmentContent`
-- Generates detailed markdown content for individual segments
-- Type-specific content generation (Info, Research, Exercise, etc.)
 
+Creates detailed content for a specific segment.
+
+**Request Body:**
+- `jobTitle` (String): The target job title
+- `courseTitle` (String): The parent course
+- `siblingCourseTitles` (String[]): Other courses for context
+- `moduleTitle` (String): The parent module
+- `siblingModuleTitles` (String[]): Other modules for context
+- `segmentTitle` (String): The specific segment
+- `segmentType` (String): The segment type
+- `siblingSegments` (Object[]): Other segments in the module
+- `additionalContext` (String): Content requirements
+
+**Response:**
+- `content` (String): Generated content in Markdown format
+
+#### Refine Segment Content
 **POST** `/refineSegmentContent`
-- Iterative content refinement based on creator feedback
-- Maintains markdown formatting and segment-appropriate structure
 
-## Data Management
+Refines existing segment content based on user feedback.
 
-### Local Storage Strategy
-- All pathway data stored in browser local storage
-- Hierarchical data structure maintained in memory during editing
-- Automatic saving of progress at each step completion
-- Final "Save Pathway" action for permanent storage
+**Request Body:**
+- `jobTitle` (String): The target job title
+- `courseTitle` (String): The parent course
+- `siblingCourseTitles` (String[]): Other courses for context
+- `moduleTitle` (String): The parent module
+- `siblingModuleTitles` (String[]): Other modules for context
+- `segmentTitle` (String): The specific segment
+- `segmentType` (String): The segment type
+- `siblingSegments` (Object[]): Other segments for context
+- `segmentContent` (String): Current content
+- `additionalContext` (String): Refinement instructions
 
-### Data Structure Hierarchy
+**Response:**
+- `content` (String): Refined content in Markdown format
+
+## Data Structures
+
+### Pathway Data Model
+
 ```
-Pathway
-├── Job Title (String)
-├── Courses (Array)
-│   ├── Course Title (String)
-│   └── Modules (Array)
-│       ├── Module Title (String)
-│       └── Segments (Array)
-│           ├── Segment Title (String)
-│           ├── Segment Type (String)
-│           └── Content (Markdown String)
+Pathway {
+  jobTitle: String,
+  courses: [
+    {
+      title: String,
+      modules: [
+        {
+          title: String,
+          segments: [
+            {
+              title: String,
+              type: String, // Info, Research, Exercise, Discussion, Project
+              content: String // Markdown
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
 ```
 
-## User Interface Features
+### Version History Model
 
-### AI Assistance Integration
-- "Create with AI" buttons on applicable forms
-- Loading states during AI generation
-- Error handling for API failures
-- Retry mechanisms for failed requests
+```
+VersionHistory {
+  stepType: String, // "courseTitles", "moduleTitles", "segmentOverview", "segmentContent"
+  stepId: String, // Unique identifier for the specific step instance
+  versions: [
+    {
+      versionNumber: Number,
+      timestamp: Date,
+      data: Object, // The specific data for this step
+      prompt: String // The user prompt that generated this version
+    }
+  ],
+  currentVersion: Number
+}
+```
 
-### Responsive Design Requirements
-- Mobile-friendly interface
-- Tablet optimization for content creation
-- Desktop-optimized for complex navigation
+## Technical Requirements
 
-### Accessibility Considerations
+### Frontend Requirements
+- React functional components with hooks
+- Client-side routing for step navigation
+- Local storage integration for data persistence
+- Responsive design for various screen sizes
+- Form validation and error handling
+- Loading states for AI generation requests
+
+### Backend Requirements
+- Express.js server with CORS configuration
+- RESTful API endpoints
+- Request validation middleware
+- Error handling and logging
+- AI service integration
+- JSON response formatting
+
+### Development Considerations
+- No TypeScript usage (pure JavaScript)
+- Modern ES6+ syntax
+- Component-based architecture
+- State management for complex form data
+- Optimistic UI updates for better user experience
+- Proper error boundaries and fallback states
+
+## User Experience Guidelines
+
+### Loading States
+- Show loading indicators during AI generation
+- Disable form inputs while requests are processing
+- Provide clear feedback on operation status
+
+### Error Handling
+- Display user-friendly error messages
+- Provide retry mechanisms for failed requests
+- Validate form inputs before submission
+- Handle network connectivity issues gracefully
+
+### Accessibility
 - Keyboard navigation support
 - Screen reader compatibility
-- High contrast mode support
-- Focus management across form steps
+- Proper ARIA labels and roles
+- Color contrast compliance
+- Focus management for dynamic content
 
-## Content Generation Context
-
-### Hierarchical Context Awareness
-The AI endpoints utilize contextual information from the pathway hierarchy:
-
-- **Job Title**: Foundational context for all generations
-- **Sibling Relationships**: Courses aware of other courses, modules aware of sibling modules
-- **Parent Relationships**: Content generation considers parent course and module context
-- **Additional Context**: Creator-provided refinement instructions
-
-### Content Type Specifications
-
-#### Segment Types and Their Purposes
-- **Info**: Educational content, explanations, theoretical foundations
-- **Research**: Investigation tasks, data gathering, analysis activities
-- **Exercise**: Practical application, skill-building activities
-- **Discussion**: Collaborative learning, peer interaction prompts
-- **Project**: Comprehensive application, portfolio-building activities
-
-## Error Handling and Validation
-
-### Frontend Validation
-- Form field validation before submission
-- Required field enforcement
-- Character limits and formatting checks
-- Real-time validation feedback
-
-### Backend Error Management
-- API endpoint error responses
-- Network failure handling
-- Timeout management
-- Graceful degradation when AI services unavailable
-
-### Data Integrity
-- Version conflict resolution
-- Local storage quota management
-- Data backup and recovery mechanisms
-- Corruption detection and repair
-
-## Performance Considerations
-
-### Optimization Strategies
-- Lazy loading of pathway sections
-- Efficient re-rendering for tree navigation
-- Debounced AI requests for refinements
-- Caching of generated content versions
-
-### Scalability Planning
-- Modular component architecture
-- Efficient state management
-- Memory usage optimization for large pathways
-- Progressive loading for complex hierarchies
-
-## Security and Privacy
-
-### Data Protection
-- Local-only data storage (no server persistence)
-- Secure API communication
-- Input sanitization for AI prompts
-- XSS prevention measures
-
-### Content Ownership
-- Creator retains full ownership of generated pathways
-- Export capabilities for data portability
-- Clear data deletion procedures
-- Privacy-first design principles
+### Performance
+- Lazy load tree view components
+- Debounce API requests where appropriate
+- Implement client-side caching for generated content
+- Optimize re-renders with proper React patterns
